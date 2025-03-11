@@ -1,0 +1,6 @@
+Authentication Apis:
+  - User Register Api:
+    - http://localhost:5000/auth/register
+
+  - User Login Api:
+    - http://localhost:5000/auth/login
