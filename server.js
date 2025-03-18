@@ -1,36 +1,22 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2");
-
+require('dotenv').config();
+const express = require('express');
 const app = express();
-const authRoutes = require("./auth-api/auth_route");
+const sequelize = require('./config/db'); // ✅ Ensure DB is imported
+const authRoutes = require('./auth-api/auth_route'); // ✅ Correct path
 
-// MySQL connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "rootpassword",
-  database: process.env.DB_NAME || "mydatabase",
-});
+// ✅ Middleware
+app.use(express.json()); // Parse JSON
+app.use('/auth', authRoutes); // Use auth routes
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err.stack);
-    return;
-  }
-  console.log("✅ Connected to MySQL database");
-});
+// ✅ Test Database Connection & Sync Tables
+sequelize.authenticate()
+  .then(() => {
+    console.log('✅ Database connected successfully');
+    return sequelize.sync({ alter: true }); // ✅ Sync tables without dropping data
+  })
+  .then(() => console.log('✅ Tables synced'))
+  .catch(err => console.error('❌ Database error:', err));
 
-// Middleware
-app.use(express.json()); // ✅ Parse JSON
-app.use("/auth", authRoutes); // ✅ Use routes
-
-// Root Route
-app.get("/", (req, res) => {
-  res.send("🚀 Express backend is running!");
-});
-
-// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
