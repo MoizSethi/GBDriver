@@ -1,6 +1,14 @@
-Authentication Apis:
-  - User Register Api:
-    - http://localhost:5000/auth/register
+Qoutes_api:
+- Rides_info_api:
+  - http://localhost:5000/api/ride/create
+  - http://localhost:5000/api/ride/all
 
-  - User Login Api:
-    - http://localhost:5000/auth/login
+- Guest_api:
+  - http://localhost:5000/api/guest/register
+
+- Register_api:
+  - http://localhost:5000/api/user/register
+  
+- Vehicle_api:
+  - http://localhost:5000/api/vehicle/add
+  - http://localhost:5000/api/vehicle/all

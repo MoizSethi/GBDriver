@@ -1,12 +1,27 @@
-require('dotenv').config();
+require('dotenv').config(); // ✅ Load environment variables
+
 const express = require('express');
-const app = express();
+const cors = require('cors'); // ✅ Allow cross-origin requests
 const sequelize = require('./config/db'); // ✅ Ensure DB is imported
-const authRoutes = require('./auth-api/auth_route'); // ✅ Correct path
+
+// ✅ Import Routes
+const rideInfoRoutes = require("./ride-info/routes");
+const vehicleRoutes = require("./vehicle/routes");
+const userRoutes = require("./user/routes");
+const guestRoutes = require("./guest/routes");
+
+const app = express();
 
 // ✅ Middleware
-app.use(express.json()); // Parse JSON
-app.use('/auth', authRoutes); // Use auth routes
+app.use(cors()); // ✅ Enable CORS
+app.use(express.json()); // ✅ Parse JSON
+app.use("/images", express.static("public/images"));
+
+// ✅ Routes
+app.use("/api/ride", rideInfoRoutes);
+app.use("/api/vehicle", vehicleRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/guest", guestRoutes);
 
 // ✅ Test Database Connection & Sync Tables
 sequelize.authenticate()
