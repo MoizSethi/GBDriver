@@ -28,6 +28,7 @@ const upload = multer({ storage }).array("images", 3); // Allow up to 3 images
 exports.addVehicle = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) return res.status(500).json({ success: false, error: err.message });
+    console.log("Uploaded Files:", req.files);
 
     try {
       const { name, type, luggage, passengers, flat_rate, available } = req.body;
@@ -38,6 +39,7 @@ exports.addVehicle = async (req, res) => {
 
       // ✅ Store image URLs in the database
       let imagePaths = req.files.map(file => `/images/vehicles/${name.replace(/\s+/g, "_")}/${file.filename}`);
+      console.log("Image Paths to Store:", imagePaths);
 
       const newVehicle = await Vehicle.create({
         name,
@@ -46,7 +48,7 @@ exports.addVehicle = async (req, res) => {
         passengers,
         flat_rate,
         available: available === "true",
-        images: imagePaths.length > 0 ? JSON.stringify(imagePaths) : null
+        images: imagePaths.length > 0 ? imagePaths : null,
       });
 
       res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
