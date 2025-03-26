@@ -1,4 +1,4 @@
-# sh git.sh
+# sh  git.sh
 
 git add .
 git commit -m "Images storing problem fix"
