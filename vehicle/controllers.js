@@ -66,7 +66,7 @@ exports.getVehicles = async (req, res) => {
     // ✅ Parse image paths before sending response
     const formattedVehicles = vehicles.map(vehicle => ({
       ...vehicle.dataValues,
-      images: vehicle.images ? JSON.parse(vehicle.images) : []
+      images: vehicle.images || []
     }));
 
     res.status(200).json({ success: true, vehicles: formattedVehicles });
