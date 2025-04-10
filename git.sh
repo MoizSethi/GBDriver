@@ -1,5 +1,5 @@
 # sh  git.sh
 
 git add .
-git commit -m "Images fetching problem fix"
+git commit -m "driver registration done vehicle api fix some minor changes"
 git push origin main -uf

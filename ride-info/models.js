@@ -6,8 +6,9 @@ const RideInfo = db.define("RideInfo", {
   pickup_location: { type: DataTypes.STRING, allowNull: false },
   dropoff_location: { type: DataTypes.STRING, allowNull: false },
   pickup_datetime: { type: DataTypes.DATE, allowNull: false },
-  return_location: { type: DataTypes.STRING },
+  add_stop: { type: DataTypes.JSON },
   num_passengers: { type: DataTypes.INTEGER, allowNull: false },
+  flight_number: { type: DataTypes.INTEGER, allowNull: false },
   num_luggage: { type: DataTypes.INTEGER, allowNull: false },
   num_hours: { type: DataTypes.INTEGER }, // Only for hourly/as directed
   child_seat: { type: DataTypes.BOOLEAN, defaultValue: false },

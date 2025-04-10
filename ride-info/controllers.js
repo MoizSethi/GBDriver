@@ -8,6 +8,8 @@ exports.createRide = async (req, res) => {
       dropoffLocation,
       pickupDateTime,
       numPassengers,
+      addStop,
+      flightNumber,
       numLuggage,
       numHours,
       hasChildSeat
@@ -18,19 +20,24 @@ exports.createRide = async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing required fields" });
     }
 
+    // ✅ Validate addStop is an array or null
+    const stops = Array.isArray(addStop) ? addStop : (addStop ? [addStop] : null);
+
     // ✅ Create new ride in DB
     const ride = await RideInfo.create({
       ride_type: rideType,
       pickup_location: pickupLocation,
       dropoff_location: dropoffLocation,
       pickup_datetime: pickupDateTime,
+      add_stop: stops,
+      flight_number: flightNumber,
       num_passengers: numPassengers,
       num_hours: numHours || null,
       num_luggage: numLuggage,
       has_child_seat: hasChildSeat || false
     });
 
-    res.status(201).json({ success: true, ride });
+    res.status(200).json({ success: true, ride });
   } catch (error) {
     console.error("❌ Error creating ride:", error);
     res.status(500).json({ success: false, error: error.message });
