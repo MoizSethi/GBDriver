@@ -1,48 +1,74 @@
-const RideInfo = require("./models");
+const { RideInfo, Vehicle } = require("./models");
 
 exports.createRide = async (req, res) => {
   try {
     const {
-      rideType,
+      serviceType,
+      pickupDate,
+      pickupTime,
       pickupLocation,
       dropoffLocation,
-      pickupDateTime,
-      numPassengers,
-      addStop,
-      flightNumber,
-      numLuggage,
-      numHours,
-      hasChildSeat
+      multipleStops,
+      returnDifferentLocation,
+      passengers,
+      luggage,
+      hours,
+      childSeats,
+      distanceKm,
+      vehicleId, // required to calculate price
     } = req.body;
 
-    // ✅ Ensure required fields are present
-    if (!rideType || !pickupLocation || !dropoffLocation || !pickupDateTime || !numPassengers || !numLuggage) {
+    // Basic field validation
+    if (
+      !serviceType || !pickupDate || !pickupTime ||
+      !pickupLocation || !dropoffLocation || !distanceKm ||
+      !passengers || !luggage
+    ) {
       return res.status(400).json({ success: false, error: "Missing required fields" });
     }
 
-    // ✅ Validate addStop is an array or null
-    const stops = Array.isArray(addStop) ? addStop : (addStop ? [addStop] : null);
+    // Fetch vehicle to calculate price
+    const vehicle = await Vehicle.findByPk(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({ success: false, error: "Vehicle not found" });
+    }
 
-    // ✅ Create new ride in DB
+    // Calculate total price
+    const totalPrice = parseFloat(distanceKm) * parseFloat(vehicle.pricePerKm);
+
+    // Normalize multiple stops (array or null)
+    const stops = Array.isArray(multipleStops)
+      ? multipleStops
+      : multipleStops
+      ? [multipleStops]
+      : null;
+
+    // Save ride to DB
     const ride = await RideInfo.create({
-      ride_type: rideType,
+      service_type: serviceType,
+      pickup_date: pickupDate,
+      pickup_time: pickupTime,
       pickup_location: pickupLocation,
       dropoff_location: dropoffLocation,
-      pickup_datetime: pickupDateTime,
       add_stop: stops,
-      flight_number: flightNumber,
-      num_passengers: numPassengers,
-      num_hours: numHours || null,
-      num_luggage: numLuggage,
-      has_child_seat: hasChildSeat || false
+      return_different_location: returnDifferentLocation || false,
+      num_passengers: passengers,
+      num_luggage: luggage,
+      num_hours: hours || null,
+      has_child_seat: childSeats || false,
+      distance_km: distanceKm,
+      total_price: totalPrice,
+      vehicle_id: vehicleId
     });
 
-    res.status(200).json({ success: true, ride });
+    return res.status(200).json({ success: true, ride });
+
   } catch (error) {
     console.error("❌ Error creating ride:", error);
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
+
 exports.getAllRides = async (req, res) => {
   try {
     const rides = await RideInfo.findAll();

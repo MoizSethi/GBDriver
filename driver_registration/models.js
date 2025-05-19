@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
-const db = require("../config/db"); // Adjust the path as per your config
+const db = require("../config/db");
 
-const DriverRegistration = db.define("Drivers", {
+const Driver = db.define("Driver", {
   name: {
     type: DataTypes.STRING,
     allowNull: false
@@ -10,9 +10,7 @@ const DriverRegistration = db.define("Drivers", {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true
-    }
+    validate: { isEmail: true }
   },
   password: {
     type: DataTypes.STRING,
@@ -23,13 +21,16 @@ const DriverRegistration = db.define("Drivers", {
     allowNull: false
   },
   profilePicture: {
-    type: DataTypes.STRING, // Store file path or URL
+    type: DataTypes.STRING,
     allowNull: true
   },
   dateOfBirth: {
     type: DataTypes.DATEONLY,
     allowNull: false
   }
+}, {
+  tableName: "drivers",
+  timestamps: true
 });
 
-module.exports = DriverRegistration;
+module.exports = Driver;

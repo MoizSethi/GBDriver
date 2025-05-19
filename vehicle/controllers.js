@@ -3,31 +3,32 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 
-// ✅ Configure Multer for multiple file storage
+// 🛠 Configure Multer for vehicle images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const vehicleName = req.body.name ? req.body.name.replace(/\s+/g, "_") : "default_vehicle"; // Default if `name` is missing
-    const folderPath = `./public/images/vehicles/${vehicleName}`;
+    const vehicleBrand = req.body.vehicleBrand || "unknown_brand";
+    const folderName = vehicleBrand.replace(/\s+/g, "_");
+    const folderPath = `./public/images/vehicles/${folderName}`;
 
-    // Create the folder if it doesn't exist
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
 
-    cb(null, folderPath); // Destination folder
+    cb(null, folderPath);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // File name
-  }
+    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+  },
 });
 
-// ✅ Multer middleware for multiple image uploads
-const upload = multer({ storage }).array("images", 3); // Allow up to 3 images
+const upload = multer({ storage }).array("images", 3); // Max 3 images
 
-// ✅ Add Vehicle with Multiple Images
+// ✅ Add Vehicle
 exports.addVehicle = async (req, res) => {
   upload(req, res, async (err) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
+    if (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
 
     try {
       const {
@@ -39,19 +40,20 @@ exports.addVehicle = async (req, res) => {
         luggage,
         passengers,
         flat_rate,
+        pricePerKm,
       } = req.body;
 
-      // Check for required fields
-      if (!luggage || !passengers || !flat_rate) {
-        return res.status(400).json({ success: false, error: "Required fields are missing." });
+      // Validate required fields
+      if (!vehicleBrand || !luggage || !passengers || !flat_rate || !pricePerKm) {
+        return res.status(400).json({ success: false, error: "Missing required fields" });
       }
 
-      // Map image files to their respective paths
+      // Normalize image paths
+      const folderName = vehicleBrand.replace(/\s+/g, "_");
       const imagePaths = req.files.map(file =>
-        `/images/vehicles/${vehicleBrand.replace(/\s+/g, "_")}/${file.filename}`
+        `/images/vehicles/${folderName}/${file.filename}`
       );
 
-      // Create the new vehicle entry in the database
       const newVehicle = await Vehicle.create({
         vehicleBrand,
         vehicleModel,
@@ -61,30 +63,33 @@ exports.addVehicle = async (req, res) => {
         luggage,
         passengers,
         flat_rate,
-        images: imagePaths.length > 0 ? imagePaths : null, // Store images as JSON array
+        pricePerKm,
+        images: imagePaths.length > 0 ? imagePaths : null,
       });
 
-      res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
+      return res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
     } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+      console.error("❌ Error adding vehicle:", error);
+      return res.status(500).json({ success: false, error: error.message });
     }
   });
 };
 
-// ✅ Get All Vehicles Sorted by Vehicle Brand (Including Images)
+// ✅ Get All Vehicles
 exports.getVehicles = async (req, res) => {
   try {
-    // Fetch all vehicles, sorted by vehicle brand
-    const vehicles = await Vehicle.findAll({ order: [["vehicleBrand", "ASC"]] });
+    const vehicles = await Vehicle.findAll({
+      order: [["vehicleBrand", "ASC"]],
+    });
 
-    // Format the vehicles data to include the images array
     const formattedVehicles = vehicles.map(vehicle => ({
       ...vehicle.dataValues,
-      images: vehicle.images || [] // Ensure images are included, even if empty
+      images: vehicle.images || [],
     }));
 
     res.status(200).json({ success: true, vehicles: formattedVehicles });
   } catch (error) {
+    console.error("❌ Error fetching vehicles:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

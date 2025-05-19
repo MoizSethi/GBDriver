@@ -14,6 +14,7 @@ exports.registerDriver = async (req, res) => {
       dateOfBirth
     } = req.body;
 
+    // 🔍 Basic validations
     if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
       return res.status(400).json({ success: false, error: "All fields are required" });
     }
@@ -24,22 +25,32 @@ exports.registerDriver = async (req, res) => {
 
     const existing = await Driver.findOne({ where: { email } });
     if (existing) {
-      return res.status(400).json({ success: false, error: "Email already exists" });
+      return res.status(400).json({ success: false, error: "Email already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ Save profile picture if uploaded
     let profilePicture = null;
     if (req.file) {
       const driverFolder = name.replace(/\s+/g, "_");
-      profilePicture = `/images/drivers/${driverFolder}/${req.file.filename}`;
+      const uploadDir = path.join(__dirname, "../public/images/drivers", driverFolder);
+
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadDir, req.file.originalname);
+      fs.writeFileSync(filePath, req.file.buffer); // Optional: if using buffer
+
+      profilePicture = `/images/drivers/${driverFolder}/${req.file.originalname}`;
     }
 
+    // ✅ Create driver (remove confirmPassword)
     const driver = await Driver.create({
       name,
       email,
       password: hashedPassword,
-      confirmPassword: hashedPassword,
       profilePicture,
       dateOfBirth
     });
