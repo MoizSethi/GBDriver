@@ -28,4 +28,12 @@ const upload = multer({ storage });
 // ✅ POST /driver/register
 router.post("/register", upload.single("profilePicture"), controller.registerDriver);
 
+// ✅ POST /driver/login
+router.post("/login", controller.loginDriver);
+
+module.exports = router;
+
+// ✅ GET /driver/all - Fetch all users
+router.get("/all", controller.getAllUsers);
+
 module.exports = router;

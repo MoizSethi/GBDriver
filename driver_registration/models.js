@@ -16,10 +16,6 @@ const Driver = db.define("Driver", {
     type: DataTypes.STRING,
     allowNull: false
   },
-  confirmPassword: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
   profilePicture: {
     type: DataTypes.STRING,
     allowNull: true
@@ -27,7 +23,12 @@ const Driver = db.define("Driver", {
   dateOfBirth: {
     type: DataTypes.DATEONLY,
     allowNull: false
-  }
+  },
+  subdomain: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      // unique: true,
+    }
 }, {
   tableName: "drivers",
   timestamps: true

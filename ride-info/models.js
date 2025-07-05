@@ -63,6 +63,22 @@ const RideInfo = db.define("RideInfo", {
       key: "id",
     },
   },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: "users", // adjust this if your user table is named differently
+      key: "id",
+    },
+  },
+  driver_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: "drivers", // adjust this if your user table is named differently
+      key: "id",
+    },
+  },
 }, {
   tableName: "rides",
   timestamps: true,

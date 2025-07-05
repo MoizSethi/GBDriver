@@ -1,20 +1,38 @@
 const Vehicle = require("./models");
+const Driver = require("../driver_registration/models"); // Adjust if needed
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 
-// 🛠 Configure Multer for vehicle images
+// 🔍 Extract subdomain helper
+function getSubdomain(host) {
+  if (!host) return null;
+  const parts = host.split(".");
+  if (parts.length < 2) return null;
+  return parts[0];
+}
+
+// 🛠 Multer setup (dynamic driver-aware storage)
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const vehicleBrand = req.body.vehicleBrand || "unknown_brand";
-    const folderName = vehicleBrand.replace(/\s+/g, "_");
-    const folderPath = `./public/images/vehicles/${folderName}`;
+  destination: async (req, file, cb) => {
+    try {
+      const host = req.headers.host;
+      const subdomain = getSubdomain(host);
+      if (!subdomain) return cb(new Error("Missing subdomain"), null);
 
-    if (!fs.existsSync(folderPath)) {
+      const driver = await Driver.findOne({ where: { subdomain } });
+      if (!driver) return cb(new Error("Driver not found for subdomain"), null);
+
+      const vehicleBrand = req.body.vehicleBrand || "unknown_brand";
+      const folderName = vehicleBrand.replace(/\s+/g, "_");
+
+      const folderPath = `./public/images/vehicles/${subdomain}/${folderName}`;
       fs.mkdirSync(folderPath, { recursive: true });
-    }
 
-    cb(null, folderPath);
+      cb(null, folderPath);
+    } catch (err) {
+      cb(err, null);
+    }
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}${path.extname(file.originalname)}`);
@@ -23,7 +41,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage }).array("images", 3); // Max 3 images
 
-// ✅ Add Vehicle
+// ✅ Add Vehicle (multi-tenant)
 exports.addVehicle = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -31,6 +49,15 @@ exports.addVehicle = async (req, res) => {
     }
 
     try {
+      // const subdomain = req.header('X-Subdomain');
+      const host = req.headers.host; // e.g., driver1.localhost:5000
+      const subdomain = host.split('.')[0]; 
+      console.log('Subdomain received for vehicle:', subdomain); // debug log
+      if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
+
+      const driver = await Driver.findOne({ where: { subdomain } });
+      if (!driver) return res.status(404).json({ success: false, error: "Driver not found" });
+
       const {
         vehicleBrand,
         vehicleModel,
@@ -43,15 +70,13 @@ exports.addVehicle = async (req, res) => {
         pricePerKm,
       } = req.body;
 
-      // Validate required fields
       if (!vehicleBrand || !luggage || !passengers || !flat_rate || !pricePerKm) {
         return res.status(400).json({ success: false, error: "Missing required fields" });
       }
 
-      // Normalize image paths
       const folderName = vehicleBrand.replace(/\s+/g, "_");
       const imagePaths = req.files.map(file =>
-        `/images/vehicles/${folderName}/${file.filename}`
+        `/images/vehicles/${subdomain}/${folderName}/${file.filename}`
       );
 
       const newVehicle = await Vehicle.create({
@@ -64,21 +89,35 @@ exports.addVehicle = async (req, res) => {
         passengers,
         flat_rate,
         pricePerKm,
+        driver_id: driver.id, // associate vehicle with driver
         images: imagePaths.length > 0 ? imagePaths : null,
       });
 
-      return res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
+      res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
     } catch (error) {
       console.error("❌ Error adding vehicle:", error);
-      return res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 };
 
-// ✅ Get All Vehicles
+// ✅ Get Vehicles for Current Subdomain Driver
 exports.getVehicles = async (req, res) => {
   try {
+    const host = req.headers.host; // e.g., driver1.localhost:5000
+      const subdomain = host.split('.')[0]; 
+    console.log('Subdomain received for vehicle:', subdomain); // debug log
+
+    if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
+
+    const driver = await Driver.findOne({ where: { subdomain } });
+    if (!driver) {
+      console.log('Driver not found for subdomain:', subdomain);
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
+
     const vehicles = await Vehicle.findAll({
+      where: { driver_id: driver.id },
       order: [["vehicleBrand", "ASC"]],
     });
 

@@ -13,6 +13,16 @@ const driverRoutes = require("./driver_registration/routes");
 
 const app = express();
 
+// ✅ Enable subdomain parsing (e.g., driver1.localhost)
+app.set("subdomain offset", 1); // So req.subdomains[0] = "driver1"
+
+// ✅ Middleware to extract subdomain and attach to request
+app.use((req, res, next) => {
+  const subdomain = req.subdomains[0]; // e.g., "driver1"
+  req.tenantSubdomain = subdomain;
+  next();
+});
+
 // ✅ Middleware
 app.use(cors()); // ✅ Enable CORS
 app.use(express.json()); // ✅ Parse JSON
@@ -29,7 +39,7 @@ app.use("/api/driver", driverRoutes);
 sequelize.authenticate()
   .then(() => {
     console.log('✅ Database connected successfully');
-    return sequelize.sync({ alter: true }); // ✅ Sync tables without dropping data
+    return sequelize.sync(); // ✅ Sync tables without dropping data
   })
   .then(() => console.log('✅ Tables synced'))
   .catch(err => console.error('❌ Database error:', err));

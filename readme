@@ -12,3 +12,9 @@ Qoutes_api:
 - Vehicle_api:
   - http://localhost:5000/api/vehicle/add
   - http://localhost:5000/api/vehicle/all
+- Driver_api:
+  - http://localhost:5000/api/driver/register
+  - http://localhost:5000/api/driver/login
+
+- Database_Migrations:
+  - npx sequelize-cli db:migrate --env development

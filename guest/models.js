@@ -20,7 +20,15 @@ const Guest = sequelize.define('Guest', {
         validate: {
             isEmail: true, // ✅ Ensure it's a valid email
         }
+    },
+    driver_id: { // 🔑 Guest belongs to a Driver
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: "drivers",
+      key: "id"
     }
+  }
 }, { timestamps: true });
 
 module.exports = Guest;

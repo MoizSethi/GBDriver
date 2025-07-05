@@ -14,7 +14,7 @@ exports.registerDriver = async (req, res) => {
       dateOfBirth
     } = req.body;
 
-    // 🔍 Basic validations
+    // Validate fields
     if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
       return res.status(400).json({ success: false, error: "All fields are required" });
     }
@@ -30,34 +30,83 @@ exports.registerDriver = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Save profile picture if uploaded
-    let profilePicture = null;
-    if (req.file) {
-      const driverFolder = name.replace(/\s+/g, "_");
-      const uploadDir = path.join(__dirname, "../public/images/drivers", driverFolder);
+    // 🔢 Generate unique subdomain like 'driver1', 'driver2', etc.
+    const count = await Driver.count();
+    let subdomain = `driver${count + 1}`;
 
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadDir, req.file.originalname);
-      fs.writeFileSync(filePath, req.file.buffer); // Optional: if using buffer
-
-      profilePicture = `/images/drivers/${driverFolder}/${req.file.originalname}`;
+    // 🛑 Ensure subdomain uniqueness in case some drivers were deleted
+    while (await Driver.findOne({ where: { subdomain } })) {
+      subdomain = `driver${Math.floor(Math.random() * 10000)}`; // fallback unique name
     }
 
-    // ✅ Create driver (remove confirmPassword)
+    const profilePicture = req.file
+      ? `/images/drivers/${name.replace(/\s+/g, "_")}/${req.file.filename}`
+      : null;
+
     const driver = await Driver.create({
       name,
       email,
       password: hashedPassword,
+      dateOfBirth,
       profilePicture,
-      dateOfBirth
+      subdomain
     });
 
-    res.status(201).json({ success: true, message: "Driver registered", driver });
+    res.status(201).json({
+      success: true,
+      message: "Driver registered",
+      driver: {
+        id: driver.id,
+        name: driver.name,
+        email: driver.email,
+        subdomain: driver.subdomain
+      }
+    });
   } catch (error) {
     console.error("❌ Error registering driver:", error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Login Driver
+exports.loginDriver = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 🔍 Validate input
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: "Email and password are required" });
+    }
+
+    // 🔍 Check if driver exists
+    const driver = await Driver.findOne({ where: { email } });
+    if (!driver) {
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+
+    // 🔒 Verify password
+    const isMatch = await bcrypt.compare(password, driver.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+
+    // ✅ Login successful
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error("❌ Error logging in driver:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+//fetching all the users 
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await Driver.findAll({attributes: { exclude: ["password"] }}); // show all only exclude password
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch users", error: err.message });
   }
 };
