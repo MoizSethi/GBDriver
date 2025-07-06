@@ -28,7 +28,8 @@ const Driver = db.define("Driver", {
       type: DataTypes.STRING,
       allowNull: false,
       // unique: true,
-    }
+    },
+  isApproved: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false } 
 }, {
   tableName: "drivers",
   timestamps: true

@@ -36,4 +36,11 @@ module.exports = router;
 // ✅ GET /driver/all - Fetch all users
 router.get("/all", controller.getAllUsers);
 
+// ✅ PATCH /driver/approve/:driverId
+router.patch("/approve/:driverId", controller.approveDriver);
+
+router.get("/pending", controller.getUnapprovedDrivers); // call this from admin panel
+
+router.delete("/:driverId", controller.deleteDriver);
+
 module.exports = router;

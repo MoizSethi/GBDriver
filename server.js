@@ -10,6 +10,7 @@ const vehicleRoutes = require("./vehicle/routes");
 const userRoutes = require("./user/routes");
 const guestRoutes = require("./guest/routes");
 const driverRoutes = require("./driver_registration/routes");
+const adminUserRoutes = require('./admin_users/routes');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/vehicle", vehicleRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/guest", guestRoutes);
 app.use("/api/driver", driverRoutes);
+app.use('/api/admin', adminUserRoutes);
 
 // ✅ Test Database Connection & Sync Tables
 sequelize.authenticate()

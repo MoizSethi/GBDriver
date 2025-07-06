@@ -15,6 +15,13 @@ Qoutes_api:
 - Driver_api:
   - http://localhost:5000/api/driver/register
   - http://localhost:5000/api/driver/login
+  - http://localhost:5000/api/driver/all
+  - http://localhost:5000/api/driver/approve/:driverId
+  - http://localhost:5000/api/driver/pending
+- Admin_api:
+  - http://localhost:5000/api/admin/create
+  - http://localhost:5000/api/admin/login
+  - http://localhost:5000/api/admin/all
 
 - Database_Migrations:
   - npx sequelize-cli db:migrate --env development

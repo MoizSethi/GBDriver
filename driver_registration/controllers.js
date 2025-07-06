@@ -49,7 +49,8 @@ exports.registerDriver = async (req, res) => {
       password: hashedPassword,
       dateOfBirth,
       profilePicture,
-      subdomain
+      subdomain,
+      isApproved: false
     });
 
     res.status(201).json({
@@ -76,6 +77,10 @@ exports.loginDriver = async (req, res) => {
     // 🔍 Validate input
     if (!email || !password) {
       return res.status(400).json({ success: false, error: "Email and password are required" });
+    }
+    // ❌ Check if approved
+    if (!driver.isApproved) {
+      return res.status(403).json({ success: false, error: "Your account is pending approval by the admin." });
     }
 
     // 🔍 Check if driver exists
@@ -104,9 +109,72 @@ exports.loginDriver = async (req, res) => {
 //fetching all the users 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await Driver.findAll({attributes: { exclude: ["password"] }}); // show all only exclude password
+    const users = await Driver.findAll({ attributes: { exclude: ["password"] } }); // show all only exclude password
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch users", error: err.message });
   }
 };
+
+exports.approveDriver = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { role } = req.body; // 🚨 Get role from request body (or use req.headers['x-user-role'])
+
+    if (!['superadmin', 'manager'].includes(role)) {
+      return res.status(403).json({ success: false, error: "Not authorized to approve drivers" });
+    }
+
+    const driver = await Driver.findByPk(driverId);
+    if (!driver) {
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
+
+    driver.isApproved = true;
+    await driver.save();
+
+    res.status(200).json({ success: true, message: "Driver approved" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// 🧠 Only unapproved drivers
+exports.getUnapprovedDrivers = async (req, res) => {
+  try {
+    const drivers = await Driver.findAll({
+      where: { isApproved: false },
+      attributes: { exclude: ["password"] }
+    });
+    res.status(200).json(drivers);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch unapproved drivers", error: err.message });
+  }
+};
+
+exports.deleteDriver = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({ success: false, error: "Role is required" });
+    }
+
+    if (role !== 'superadmin') {
+      return res.status(403).json({ success: false, error: "Only superadmin can delete drivers" });
+    }
+
+    const driver = await Driver.findByPk(driverId);
+    if (!driver) {
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
+
+    await driver.destroy();
+    res.status(200).json({ success: true, message: "Driver deleted" });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
