@@ -6,8 +6,9 @@ Qoutes_api:
 - Guest_api:
   - http://localhost:5000/api/guest/register
 
-- Register_api:
+- User_Register_api:
   - http://localhost:5000/api/user/register
+  - http://localhost:5000/api/user/login
   
 - Vehicle_api:
   - http://localhost:5000/api/vehicle/add

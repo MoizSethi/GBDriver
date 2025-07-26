@@ -49,9 +49,9 @@ exports.addVehicle = async (req, res) => {
     }
 
     try {
-      // const subdomain = req.header('X-Subdomain');
-      const host = req.headers.host; // e.g., driver1.localhost:5000
-      const subdomain = host.split('.')[0]; 
+      const subdomain = req.header('X-Subdomain');
+      // const host = req.headers.host; // e.g., driver1.localhost:5000
+      // const subdomain = host.split('.')[0]; 
       console.log('Subdomain received for vehicle:', subdomain); // debug log
       if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
 
@@ -104,9 +104,10 @@ exports.addVehicle = async (req, res) => {
 // ✅ Get Vehicles for Current Subdomain Driver
 exports.getVehicles = async (req, res) => {
   try {
-    const host = req.headers.host; // e.g., driver1.localhost:5000
-      const subdomain = host.split('.')[0]; 
-    console.log('Subdomain received for vehicle:', subdomain); // debug log
+    // const host = req.headers.host; // e.g., driver1.localhost:5000
+    // const subdomain = host.split('.')[0];
+    const subdomain = req.header('X-Subdomain');
+    console.log('Subdomain received for vehicle selection:', subdomain); // debug log
 
     if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
 

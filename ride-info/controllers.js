@@ -1,8 +1,8 @@
-const  RideInfo  = require("./models");
-const Driver = require("../driver_registration/models") 
-const Vehicle = require("../vehicle/models") 
-const Guest = require("../guest/models") 
-const User = require("../user/models"); 
+const RideInfo = require("./models");
+const Driver = require("../driver_registration/models")
+const Vehicle = require("../vehicle/models")
+const Guest = require("../guest/models")
+const User = require("../user/models");
 
 // Helper: extract subdomain from host
 function getSubdomain(host) {
@@ -14,9 +14,9 @@ function getSubdomain(host) {
 
 exports.createRide = async (req, res) => {
   try {
-    // const subdomain = req.header('X-Subdomain');
-    const host = req.headers.host; // e.g., driver1.localhost:5000
-    const subdomain = host.split('.')[0]; 
+    const subdomain = req.header('X-Subdomain');
+    // const host = req.headers.host; // e.g., driver1.localhost:5000
+    // const subdomain = host.split('.')[0]; 
     console.log('Subdomain received for ride info:', subdomain);
     if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
 
@@ -40,6 +40,9 @@ exports.createRide = async (req, res) => {
       userId,
       guestId
     } = req.body;
+
+    console.log("Incoming ride request body:", req.body);
+    console.log("Resolved IDs:", { userId, guestId, vehicleId });
 
     if (
       !serviceType || !pickupDate || !pickupTime ||
@@ -86,8 +89,8 @@ exports.createRide = async (req, res) => {
     const stops = Array.isArray(multipleStops)
       ? multipleStops
       : multipleStops
-      ? [multipleStops]
-      : null;
+        ? [multipleStops]
+        : null;
 
     const ride = await RideInfo.create({
       service_type: serviceType,
@@ -104,7 +107,7 @@ exports.createRide = async (req, res) => {
       distance_km: distanceKm,
       total_price: totalPrice,
       vehicle_id: vehicleId,
-      driver_id: driver.id,  
+      driver_id: driver.id,
       user_id: user ? user.id : null,
       guest_id: guest ? guest.id : null,
     });
@@ -121,7 +124,7 @@ exports.getAllRides = async (req, res) => {
   try {
     // const subdomain = req.headers["x-subdomain"];
     const host = req.headers.host; // e.g., driver1.localhost:5000
-    const subdomain = host.split('.')[0]; 
+    const subdomain = host.split('.')[0];
     if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
 
     const driver = await Driver.findOne({ where: { subdomain } });
