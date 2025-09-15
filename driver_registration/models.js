@@ -24,11 +24,16 @@ const Driver = db.define("Driver", {
     type: DataTypes.DATEONLY,
     allowNull: false
   },
-  subdomain: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      // unique: true,
-    },
+  username: {               // 🔹 new field
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  website: {               // 🔹 new field
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
   isApproved: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false } 
 }, {
   tableName: "drivers",
@@ -36,3 +41,4 @@ const Driver = db.define("Driver", {
 });
 
 module.exports = Driver;
+

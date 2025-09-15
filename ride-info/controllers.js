@@ -1,27 +1,21 @@
 const RideInfo = require("./models");
-const Driver = require("../driver_registration/models")
-const Vehicle = require("../vehicle/models")
-const Guest = require("../guest/models")
+const Driver = require("../driver_registration/models");
+const Vehicle = require("../vehicle/models");
+const Guest = require("../guest/models");
 const User = require("../user/models");
 
-// Helper: extract subdomain from host
-function getSubdomain(host) {
-  if (!host) return null;
-  const parts = host.split(".");
-  if (parts.length < 2) return null;
-  return parts[0];
-}
-
+// ✅ Create a new ride
 exports.createRide = async (req, res) => {
   try {
-    const subdomain = req.header('X-Subdomain');
-    // const host = req.headers.host; // e.g., driver1.localhost:5000
-    // const subdomain = host.split('.')[0]; 
-    console.log('Subdomain received for ride info:', subdomain);
-    if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
+    const { username } = req.params; // now taken from URL
+    if (!username) {
+      return res.status(400).json({ success: false, error: "Missing driver username" });
+    }
 
-    const driver = await Driver.findOne({ where: { subdomain } });
-    if (!driver) return res.status(404).json({ success: false, error: "Driver not found" });
+    const driver = await Driver.findOne({ where: { username } });
+    if (!driver) {
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
 
     const {
       serviceType,
@@ -41,9 +35,6 @@ exports.createRide = async (req, res) => {
       guestId
     } = req.body;
 
-    console.log("Incoming ride request body:", req.body);
-    console.log("Resolved IDs:", { userId, guestId, vehicleId });
-
     if (
       !serviceType || !pickupDate || !pickupTime ||
       !pickupLocation || !dropoffLocation || !distanceKm ||
@@ -60,7 +51,7 @@ exports.createRide = async (req, res) => {
       });
     }
 
-    //validate either user or guest has been passed at a time
+    // Validate user or guest
     let user = null;
     let guest = null;
 
@@ -78,7 +69,7 @@ exports.createRide = async (req, res) => {
       }
     }
 
-    // Fetch vehicle and ensure it belongs to this driver
+    // Validate vehicle ownership
     const vehicle = await Vehicle.findOne({ where: { id: vehicleId, driver_id: driver.id } });
     if (!vehicle) {
       return res.status(404).json({ success: false, error: "Vehicle not found or unauthorized" });
@@ -113,24 +104,25 @@ exports.createRide = async (req, res) => {
     });
 
     res.status(200).json({ success: true, ride });
-
   } catch (error) {
     console.error("❌ Error creating ride:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
+// ✅ Fetch all rides for a driver
 exports.getAllRides = async (req, res) => {
   try {
-    // const subdomain = req.headers["x-subdomain"];
-    const host = req.headers.host; // e.g., driver1.localhost:5000
-    const subdomain = host.split('.')[0];
-    if (!subdomain) return res.status(400).json({ success: false, error: "Missing subdomain" });
+    const { username } = req.params; // now from URL
+    if (!username) {
+      return res.status(400).json({ success: false, error: "Missing driver username" });
+    }
 
-    const driver = await Driver.findOne({ where: { subdomain } });
-    if (!driver) return res.status(404).json({ success: false, error: "Driver not found" });
+    const driver = await Driver.findOne({ where: { username } });
+    if (!driver) {
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
 
-    // Only fetch rides for this driver
     const rides = await RideInfo.findAll({ where: { driver_id: driver.id } });
 
     res.status(200).json({ success: true, rides });
