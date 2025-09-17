@@ -13,7 +13,7 @@ exports.registerDriver = async (req, res) => {
       confirmPassword,
       dateOfBirth,
       username,   // 🔹 add username
-      website
+      // website
     } = req.body;
 
     if (!name || !email || !password || !confirmPassword || !dateOfBirth || !username) {
@@ -47,7 +47,7 @@ exports.registerDriver = async (req, res) => {
       dateOfBirth,
       profilePicture,
       username,
-      website: `http://localhost:3000/${driver.username}`,
+      website: `http://localhost:3000/${username}`,
       isApproved: false
     });
 
