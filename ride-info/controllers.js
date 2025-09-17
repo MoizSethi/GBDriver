@@ -131,3 +131,34 @@ exports.getAllRides = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// ✅ Driver progress (summary)
+exports.getDriverProgress = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const driver = await Driver.findOne({ where: { username } });
+
+    if (!driver) {
+      return res.status(404).json({ success: false, error: "Driver not found" });
+    }
+
+    const rides = await RideInfo.findAll({ where: { driver_id: driver.id } });
+
+    const totalRides = rides.length;
+    const totalIncome = rides.reduce((sum, ride) => sum + parseFloat(ride.total_price || 0), 0);
+    const totalDistance = rides.reduce((sum, ride) => sum + parseFloat(ride.distance_km || 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        totalRides,
+        totalIncome,
+        totalDistance,
+        rides,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching progress:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
