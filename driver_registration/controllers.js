@@ -51,7 +51,7 @@ exports.registerDriver = async (req, res) => {
       isApproved: false
     });
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: "Driver registered",
       driver: {
@@ -74,19 +74,19 @@ exports.loginDriver = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 🔍 Validate input
     if (!email || !password) {
       return res.status(400).json({ success: false, error: "Email and password are required" });
-    }
-    // ❌ Check if approved
-    if (!driver.isApproved) {
-      return res.status(403).json({ success: false, error: "Your account is pending approval by the admin." });
     }
 
     // 🔍 Check if driver exists
     const driver = await Driver.findOne({ where: { email } });
     if (!driver) {
       return res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+
+    // ❌ Check if approved
+    if (!driver.isApproved) {
+      return res.status(403).json({ success: false, error: "Your account is pending approval by the admin." });
     }
 
     // 🔒 Verify password
@@ -100,6 +100,7 @@ exports.loginDriver = async (req, res) => {
       success: true,
       message: "Login successful",
     });
+
   } catch (error) {
     console.error("❌ Error logging in driver:", error);
     res.status(500).json({ success: false, error: error.message });

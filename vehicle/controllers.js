@@ -83,7 +83,7 @@ exports.addVehicle = async (req, res) => {
         images: imagePaths.length > 0 ? imagePaths : null,
       });
 
-      res.status(201).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
+      res.status(200).json({ success: true, message: "Vehicle added", vehicle: newVehicle });
     } catch (error) {
       console.error("❌ Error adding vehicle:", error);
       res.status(500).json({ success: false, error: error.message });
