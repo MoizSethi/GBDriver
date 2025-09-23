@@ -1,6 +1,6 @@
 const User = require("./models");
 const Driver = require("../driver_registration/models");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 exports.registerUser = async (req, res) => {
   try {

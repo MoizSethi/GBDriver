@@ -1,20 +1,17 @@
-# Use official Node.js LTS image
 FROM node:22-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files first (for better caching)
+# Copy package.json and lockfile first
 COPY package*.json ./
 
-# Install dependencies
+# Install inside container (so native modules compile correctly)
+RUN npm rebuild bcrypt --build-from-source 
 RUN npm install --production
 
-# Copy the rest of the application code
+# Now copy the rest of the app
 COPY . .
 
-# Expose the port your app runs on
-EXPOSE 3000
+EXPOSE 5000
 
-# Start the app
 CMD ["npm", "start"]
