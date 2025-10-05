@@ -34,7 +34,9 @@ router.post("/login", controller.loginDriver);
 module.exports = router;
 
 // ✅ GET /driver/all - Fetch all users
-router.get("/all", controller.getAllUsers);
+router.get("/all", controller.getAllDrivers);
+// ✅ GET /driver/all - Fetch all users
+router.get("/:id", controller.getDriverById);
 
 // ✅ PATCH /driver/approve/:driverId
 router.patch("/approve/:driverId", controller.approveDriver);

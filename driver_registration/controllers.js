@@ -2,6 +2,13 @@ const Driver = require("./models");
 const bcrypt = require("bcryptjs");
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+const { Op, fn, col, literal } = require("sequelize");
+const RideInfo = require("../ride-info/models");
+
+
+const JWT_SECRET = process.env.JWT_SECRET || "your_super_secret_key";
+const JWT_EXPIRES_IN = "7d"; // 7 days token expiry
 
 // ✅ Register Driver
 exports.registerDriver = async (req, res) => {
@@ -74,41 +81,72 @@ exports.loginDriver = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 🧩 1. Basic validation
     if (!email || !password) {
-      return res.status(400).json({ success: false, error: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Email and password are required" });
     }
 
-    // 🔍 Check if driver exists
+    // 🔍 2. Check if driver exists
     const driver = await Driver.findOne({ where: { email } });
     if (!driver) {
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
     }
 
-    // ❌ Check if approved
+    // 🚫 3. Check if approved
     if (!driver.isApproved) {
-      return res.status(403).json({ success: false, error: "Your account is pending approval by the admin." });
+      return res.status(403).json({
+        success: false,
+        error: "Your account is pending approval by the admin.",
+      });
     }
 
-    // 🔒 Verify password
+    // 🔒 4. Verify password
     const isMatch = await bcrypt.compare(password, driver.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
     }
 
-    // ✅ Login successful
+    // 🔑 5. Generate JWT Token
+    const token = jwt.sign(
+      {
+        id: driver.id,
+        email: driver.email,
+        username: driver.username,
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    // ✅ 6. Respond with token + driver info
     res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
+      driver: {
+        id: driver.id,
+        name: driver.name,
+        email: driver.email,
+        username: driver.username,
+        isApproved: driver.isApproved,
+        profilePicture: driver.profilePicture,
+      },
     });
-
   } catch (error) {
     console.error("❌ Error logging in driver:", error);
-    res.status(500).json({ success: false, error: error.message });
+    res
+      .status(500)
+      .json({ success: false, error: error.message || "Server error" });
   }
 };
 
 //fetching all the users 
-exports.getAllUsers = async (req, res) => {
+exports.getAllDrivers = async (req, res) => {
   try {
     const users = await Driver.findAll({ attributes: { exclude: ["password"] } }); // show all only exclude password
     res.status(200).json(users);
@@ -117,6 +155,66 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// GET /api/driver/:id
+exports.getDriverById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const driver = await Driver.findByPk(id, { attributes: { exclude: ["password"] } });
+    if (!driver) {
+      return res.status(404).json({ success: false, message: "Driver not found" });
+    }
+
+    // ✅ Total Earnings
+    const totalEarnings = await RideInfo.sum("total_price", {
+      where: { driver_id: id },
+    });
+
+    // Get today's date range (00:00:00 → 23:59:59)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // ✅ Daily Earnings (today)
+    const dailyEarnings = await RideInfo.sum("total_price", {
+      where: {
+        driver_id: id,
+        createdAt: {
+          [Op.between]: [todayStart, todayEnd],
+        },
+      },
+    });
+
+    // ✅ Weekly Earnings (last 7 days)
+    const past7Days = new Date();
+    past7Days.setDate(past7Days.getDate() - 7);
+
+    const weeklyEarnings = await RideInfo.sum("total_price", {
+      where: {
+        driver_id: id,
+        createdAt: {
+          [Op.between]: [past7Days, new Date()],
+        },
+      },
+    });
+
+    return res.json({
+      success: true,
+      driver,
+      totalEarnings: totalEarnings || 0,
+      weeklyEarnings: weeklyEarnings || 0,
+      dailyEarnings: dailyEarnings || 0,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching driver by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
 exports.approveDriver = async (req, res) => {
   try {
     const { driverId } = req.params;
