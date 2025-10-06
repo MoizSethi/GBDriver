@@ -55,6 +55,10 @@ const RideInfo = db.define("RideInfo", {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  accept_ride: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   vehicle_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

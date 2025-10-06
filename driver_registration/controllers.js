@@ -169,6 +169,12 @@ exports.getDriverById = async (req, res) => {
     const totalEarnings = await RideInfo.sum("total_price", {
       where: { driver_id: id },
     });
+    // ✅ Fetch all ride dates
+    const rideDates = await RideInfo.findAll({
+      where: { driver_id: id },
+      attributes: ["createdAt"], // only get createdAt column
+      order: [["createdAt", "DESC"]], // optional: latest first
+    });
 
     // Get today's date range (00:00:00 → 23:59:59)
     const todayStart = new Date();
@@ -205,6 +211,7 @@ exports.getDriverById = async (req, res) => {
       totalEarnings: totalEarnings || 0,
       weeklyEarnings: weeklyEarnings || 0,
       dailyEarnings: dailyEarnings || 0,
+      rideDates,
     });
   } catch (error) {
     console.error("❌ Error fetching driver by ID:", error);

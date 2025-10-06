@@ -97,6 +97,7 @@ exports.createRide = async (req, res) => {
       has_child_seat: childSeats || false,
       distance_km: distanceKm,
       total_price: totalPrice,
+      accept_ride: false,
       vehicle_id: vehicleId,
       driver_id: driver.id,
       user_id: user ? user.id : null,
@@ -160,5 +161,43 @@ exports.getDriverProgress = async (req, res) => {
   } catch (error) {
     console.error("❌ Error fetching progress:", error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// PATCH /api/ride/:id/accept
+exports.updateAcceptRide = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { accept_ride } = req.body;
+
+    // Validate input
+    if (typeof accept_ride !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: '`accept_ride` must be a boolean value (true/false)',
+      });
+    }
+
+    // Check ride existence
+    const ride = await RideInfo.findByPk(id);
+    if (!ride) {
+      return res.status(404).json({ success: false, message: 'Ride not found' });
+    }
+
+    // Update the column
+    ride.accept_ride = accept_ride;
+    await ride.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Ride updated successfully.`,
+      data: ride,
+    });
+  } catch (error) {
+    console.error('❌ Error updating accept_ride:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
   }
 };
