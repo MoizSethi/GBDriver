@@ -3,6 +3,7 @@ const Driver = require("../driver_registration/models");
 const Vehicle = require("../vehicle/models");
 const Guest = require("../guest/models");
 const User = require("../user/models");
+const RideStatus = require("../ride_status/models");
 
 // ✅ Create a new ride
 exports.createRide = async (req, res) => {
@@ -32,13 +33,18 @@ exports.createRide = async (req, res) => {
       distanceKm,
       vehicleId,
       userId,
-      guestId
+      guestId,
     } = req.body;
 
     if (
-      !serviceType || !pickupDate || !pickupTime ||
-      !pickupLocation || !dropoffLocation || !distanceKm ||
-      !passengers || !luggage
+      !serviceType ||
+      !pickupDate ||
+      !pickupTime ||
+      !pickupLocation ||
+      !dropoffLocation ||
+      !distanceKm ||
+      !passengers ||
+      !luggage
     ) {
       return res.status(400).json({ success: false, error: "Missing required fields" });
     }
@@ -83,6 +89,7 @@ exports.createRide = async (req, res) => {
         ? [multipleStops]
         : null;
 
+    // ✅ 1. Create the ride entry
     const ride = await RideInfo.create({
       service_type: serviceType,
       pickup_date: pickupDate,
@@ -104,7 +111,23 @@ exports.createRide = async (req, res) => {
       guest_id: guest ? guest.id : null,
     });
 
-    res.status(200).json({ success: true, ride });
+    // ✅ 2. Create a ride status entry linked to this ride
+    await RideStatus.create({
+      ride_id: ride.id,
+      driver_id: driver.id,
+      dispatched: false,
+      arrived: false,
+      pickup: false,
+      stops: false,
+      completed: false,
+    });
+
+    // ✅ 3. Return the combined response
+    res.status(200).json({
+      success: true,
+      message: "Ride created successfully with status tracking.",
+      ride,
+    });
   } catch (error) {
     console.error("❌ Error creating ride:", error);
     res.status(500).json({ success: false, error: error.message });
