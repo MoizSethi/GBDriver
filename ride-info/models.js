@@ -59,6 +59,10 @@ const RideInfo = db.define("RideInfo", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  is_exposed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   vehicle_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

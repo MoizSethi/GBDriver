@@ -12,6 +12,7 @@ const guestRoutes = require("./guest/routes");
 const driverRoutes = require("./driver_registration/routes");
 const adminUserRoutes = require('./admin_users/routes');
 const rideStatuses = require('./ride_status/routes.js');
+const networkRoutes = require('./network/routes.js');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/guest", guestRoutes);
 app.use("/api/driver", driverRoutes);
 app.use('/api/admin', adminUserRoutes);
 app.use('/api/status', rideStatuses);
+app.use('/api/network', networkRoutes);
 
 // ✅ Test Database Connection & Sync Tables
 sequelize.authenticate()

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const db = require("../config/db");
+const RideInfo = require('../ride-info/models')
 
 const Driver = db.define("Driver", {
   name: {
@@ -39,6 +40,11 @@ const Driver = db.define("Driver", {
   tableName: "drivers",
   timestamps: true
 });
+
+//accociations
+// ✅ Proper associations
+Driver.hasMany(RideInfo, { foreignKey: 'driver_id' });
+RideInfo.belongsTo(Driver, { foreignKey: 'driver_id' });
 
 module.exports = Driver;
 

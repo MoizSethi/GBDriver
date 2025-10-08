@@ -26,3 +26,4 @@ Qoutes_api:
 
 - Database_Migrations:
   - npx sequelize-cli db:migrate --env development
+  - npx sequelize-cli migration:generate --name
