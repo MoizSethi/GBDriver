@@ -94,8 +94,9 @@ exports.addVehicle = async (req, res) => {
 // ✅ Get Vehicles (driver by username)
 exports.getVehicles = async (req, res) => {
   try {
-    const { username } = req.params; // 👈 username from route
-    if (!username) return res.status(400).json({ success: false, error: "Missing username" });
+    const { username } = req.params;
+    if (!username)
+      return res.status(400).json({ success: false, error: "Missing username" });
 
     const driver = await Driver.findOne({ where: { username } });
     if (!driver) {
@@ -113,9 +114,19 @@ exports.getVehicles = async (req, res) => {
       images: vehicle.images || [],
     }));
 
-    res.status(200).json({ success: true, vehicles: formattedVehicles });
+    res.status(200).json({
+      success: true,
+      driver: {
+        name: driver.name,
+        profilePicture: driver.profilePicture,
+        email: driver.email,
+        isApproved: driver.isApproved,
+      },
+      vehicles: formattedVehicles,
+    });
   } catch (error) {
     console.error("❌ Error fetching vehicles:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
