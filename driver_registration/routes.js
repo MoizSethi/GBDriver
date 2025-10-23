@@ -31,18 +31,20 @@ router.post("/register", upload.single("profilePicture"), controller.registerDri
 // ✅ POST /driver/login
 router.post("/login", controller.loginDriver);
 
-module.exports = router;
-
 // ✅ GET /driver/all - Fetch all users
 router.get("/all", controller.getAllDrivers);
+
+router.get("/pending", controller.getUnapprovedDrivers);
+
+
+router.get("/test", (req, res) => res.send("✅ Driver routes working"));
+
 // ✅ GET /driver/all - Fetch all users
 router.get("/:id", controller.getDriverById);
 
+router.delete("/:driverId", controller.deleteDriver);
+
 // ✅ PATCH /driver/approve/:driverId
 router.patch("/approve/:driverId", controller.approveDriver);
-
-router.get("/pending", controller.getUnapprovedDrivers); // call this from admin panel
-
-router.delete("/:driverId", controller.deleteDriver);
 
 module.exports = router;

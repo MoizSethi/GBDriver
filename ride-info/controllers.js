@@ -43,8 +43,7 @@ exports.createRide = async (req, res) => {
       !pickupLocation ||
       !dropoffLocation ||
       !distanceKm ||
-      !passengers ||
-      !luggage
+      !passengers
     ) {
       return res.status(400).json({ success: false, error: "Missing required fields" });
     }

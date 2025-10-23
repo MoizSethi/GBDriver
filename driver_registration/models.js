@@ -30,10 +30,9 @@ const Driver = db.define("Driver", {
     allowNull: false,
     unique: true
   },
-  // website: {               // 🔹 new field
+  // driver_website: {               // 🔹 new field
   //   type: DataTypes.STRING,
-  //   allowNull: false,
-  //   unique: true
+  //   allowNull: true,
   // },
   isApproved: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false } 
 }, {

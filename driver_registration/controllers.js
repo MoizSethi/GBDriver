@@ -20,7 +20,6 @@ exports.registerDriver = async (req, res) => {
       confirmPassword,
       dateOfBirth,
       username,   // 🔹 add username
-      // website
     } = req.body;
 
     if (!name || !email || !password || !confirmPassword || !dateOfBirth || !username) {
@@ -54,7 +53,7 @@ exports.registerDriver = async (req, res) => {
       dateOfBirth,
       profilePicture,
       username,
-      website: `http://localhost:3000/${username}`,
+      // driver_website: `http://localhost:3000/${username}`,
       isApproved: false
     });
 
@@ -66,7 +65,7 @@ exports.registerDriver = async (req, res) => {
         name: driver.name,
         email: driver.email,
         username: driver.username,
-        website: `http://localhost:3000/${driver.username}` // 🔹 full URL
+        driver_website: `http://localhost:3000/${driver.username}` // 🔹 full URL
       }
     });
   } catch (error) {
@@ -252,6 +251,7 @@ exports.getUnapprovedDrivers = async (req, res) => {
       where: { isApproved: false },
       attributes: { exclude: ["password"] }
     });
+    
     res.status(200).json(drivers);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch unapproved drivers", error: err.message });

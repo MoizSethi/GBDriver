@@ -1,5 +1,5 @@
 require('dotenv').config(); // ✅ Load environment variables
-const chalk = require('chalk');
+
 const express = require('express');
 const cors = require('cors'); // ✅ Allow cross-origin requests
 const sequelize = require('./config/db'); // ✅ Ensure DB is imported
@@ -42,69 +42,15 @@ app.use('/api/status', rideStatuses);
 app.use('/api/network', networkRoutes);
 
 // ✅ Test Database Connection & Sync Tables
-console.log(chalk.bold.blue('\n💾 Database Logs'));
-console.log(chalk.gray('─────────────────────────────────────────────'));
-
 sequelize.authenticate()
   .then(() => {
-    console.log(chalk.green('✅ Database connected successfully'));
+    console.log('✅ Database connected successfully');
     return sequelize.sync(); // ✅ Sync tables without dropping data
   })
-  .then(() => {
-    console.log(chalk.green('✅ Tables synced'));
-    console.log(chalk.gray('─────────────────────────────────────────────\n'));
-  })
-  .catch(err => console.error(chalk.red('❌ Database error:'), err));
+  .then(() => console.log('✅ Tables synced'))
+  .catch(err => console.error('❌ Database error:', err));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(chalk.bold.yellow(`🚀 Server running on port ${PORT}`));
+  console.log(`🚀 Server running on port ${PORT}`);
 });
-
-// ✅ Function to list all registered routes
-function listRoutes(app) {
-  console.log("\n📜 Registered API Endpoints:\n");
-
-  const routes = [];
-
-  app._router.stack.forEach((middleware) => {
-    if (middleware.route) {
-      // Direct route (e.g. app.get('/path', ...))
-      const methods = Object.keys(middleware.route.methods)
-        .map(m => m.toUpperCase())
-        .join(', ');
-      routes.push({ method: methods, path: middleware.route.path });
-    } else if (middleware.name === 'router') {
-      // Router middleware (e.g. app.use('/api/user', userRoutes))
-      middleware.handle.stack.forEach((handler) => {
-        const route = handler.route;
-        if (route) {
-          const methods = Object.keys(route.methods)
-            .map(m => m.toUpperCase())
-            .join(', ');
-          routes.push({
-            method: methods,
-            path: middleware.regexp.source
-              .replace('^\\', '')
-              .replace('\\/?(?=\\/|$)', '')
-              .replace('^', '')
-              .replace('?', '')
-              .replace(/\\\//g, '/')
-              .replace(/\/\?\(\=\.\*\)\?\$/g, '') +
-              (route.path === '/' ? '' : route.path)
-          });
-        }
-      });
-    }
-  });
-
-  routes.forEach(r => {
-    console.log(
-      chalk.green(r.method.padEnd(10)) + chalk.cyan(' → ') + chalk.yellow(r.path)
-    );
-  });
-
-  console.log(chalk.bold.blue(`\n✅ Total Routes: ${routes.length}\n`));
-}
-
-listRoutes(app);
