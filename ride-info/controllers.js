@@ -4,6 +4,7 @@ const Vehicle = require("../vehicle/models");
 const Guest = require("../guest/models");
 const User = require("../user/models");
 const RideStatus = require("../ride_status/models");
+const calculateTotalPrice = require("../helpers/priceCalculator");
 
 // ✅ Create a new ride
 exports.createRide = async (req, res) => {
@@ -80,7 +81,7 @@ exports.createRide = async (req, res) => {
       return res.status(404).json({ success: false, error: "Vehicle not found or unauthorized" });
     }
 
-    const totalPrice = parseFloat(distanceKm) * parseFloat(vehicle.pricePerKm);
+    const totalPrice = calculateTotalPrice(distanceKm, vehicle.pricePerKm);
 
     const stops = Array.isArray(multipleStops)
       ? multipleStops
